@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Google Clean Search",
+  "version": "3.2",
+  "description": "Removes account cookies from Google search requests. Keeps you logged in.",
+
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequestFeedback",
+    "storage",
+    "cookies"
+  ],
+
+  "host_permissions": [
+    "https://www.google.com/*",
+    "https://google.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png"
+    }
+  },
+
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png"
+  }
+}
