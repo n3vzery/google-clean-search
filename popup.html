@@ -149,6 +149,20 @@
       padding: 10px 16px 0;
       line-height: 1.6;
     }
+    .footer {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 10px;
+      color: #444;
+    }
+    .footer a {
+      color: #666;
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .footer a:hover {
+      color: #1a73e8;
+    }
   </style>
 </head>
 <body>
@@ -234,6 +248,10 @@
     NID is not cryptographically signed, Google accepts any value.
     Account cookies (SID, HSID, SAPISID etc.) are removed entirely.
   </p>
+
+  <div class="footer">
+    by <a href="https://github.com/n3vzery" target="_blank">n3vzery</a>
+  </div>
 
   <script src="popup.js"></script>
 </body>
