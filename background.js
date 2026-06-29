@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
 
 let settings = { ...DEFAULT_SETTINGS };
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// Init
 
 chrome.runtime.onInstalled.addListener(async () => {
   const stored = await chrome.storage.local.get(Object.keys(DEFAULT_SETTINGS));
@@ -48,7 +48,7 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
   }
 });
 
-// ── Rules ─────────────────────────────────────────────────────────────────────
+// Rules
 
 async function getCleanCookieHeader() {
   try {
@@ -165,7 +165,7 @@ async function applyRules() {
   });
 }
 
-// ── Fake NID generation ───────────────────────────────────────────────────────
+// Fake NID generation
 // Called from popup via chrome.runtime.sendMessage
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
