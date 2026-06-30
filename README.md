@@ -2,7 +2,7 @@
 
 > Search Google privately while staying signed in. No sign-out required.
 
-[![Version](https://img.shields.io/badge/version-3.4-blue?style=flat-square)](https://github.com/n3vzery/google-clean-search)
+[![Version](https://img.shields.io/badge/version-3.5-blue?style=flat-square)](https://github.com/n3vzery/google-clean-search)
 [![Manifest](https://img.shields.io/badge/Manifest-v3-green?style=flat-square)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPL%20v3-orange?style=flat-square)](LICENSE)
 
