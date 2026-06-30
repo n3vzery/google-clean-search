@@ -3,12 +3,12 @@
 Search Google privately while staying signed in. No logout required.
 
 ## Features
-- Remove account cookies from search requests
-- Spoof NID tracker (rotates every 3 days)
-- Optional Firefox User‑Agent
-- Strip `X‑Client‑Data` header
-- SafeSearch bypass (toggle in popup)
-- Badge indicator shows protection state (green/red)
+* Remove account cookies from search requests
+* Spoof NID tracker (rotates every 3 days)
+* Optional Firefox User Agent
+* Strip `X Client Data` header
+* SafeSearch bypass (toggle in popup)
+* Badge indicator shows protection state (green/red)
 
 ## Install
 
@@ -20,7 +20,7 @@ Search Google privately while staying signed in. No logout required.
    git clone https://github.com/n3vzery/google-clean-search.git
    ```
 2. Open `chrome://extensions/` in your browser.
-3. Enable **Developer mode** using the toggle in the top‑right corner.
+3. Enable **Developer mode** using the toggle in the top right corner.
 4. Click **Load unpacked** and select the `google-clean-search` folder.
 5. The extension icon appears in your toolbar. Click it to open the popup and toggle protection on/off per service.
 
@@ -46,11 +46,11 @@ cd google-clean-search
 ```
 
 Output files go into `build/`:
-- `google-clean-search-v4.1.zip` — for manual load unpacked
-- `google-clean-search-v4.1.crx` — for ungoogled‑chromium
+* `google-clean-search-v4.1.zip` for manual load unpacked
+* `google-clean-search-v4.1.crx` for ungoogled chromium
 
 The first run generates a `google-clean-search.pem` key used to sign the CRX.
 Keep it if you want future updates to share the same extension ID.
 
 ## License
-GPL‑v3 – see [LICENSE](LICENSE).
+GPL v3, see [LICENSE](LICENSE).
