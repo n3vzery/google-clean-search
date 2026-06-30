@@ -1,12 +1,18 @@
 'use strict';
 
-const RULE_ID_REMOVE  = 1;
-const RULE_ID_XCLIENT = 2;
-const RULE_ID_MAPS    = 3;
-const RULE_ID_YOUTUBE = 4;
-const RULE_ID_NEWS    = 5;
+const RULE_ID_REMOVE   = 1;
+const RULE_ID_XCLIENT  = 2;
+const RULE_ID_MAPS     = 3;
+const RULE_ID_YOUTUBE  = 4;
+const RULE_ID_NEWS     = 5;
+const RULE_ID_IMAGES   = 6;
+const RULE_ID_SCHOLAR  = 7;
+const RULE_ID_SHOPPING = 8;
 
-const ALL_RULE_IDS  = [RULE_ID_REMOVE, RULE_ID_XCLIENT, RULE_ID_MAPS, RULE_ID_YOUTUBE, RULE_ID_NEWS];
+const ALL_RULE_IDS  = [
+  RULE_ID_REMOVE, RULE_ID_XCLIENT, RULE_ID_MAPS, RULE_ID_YOUTUBE,
+  RULE_ID_NEWS, RULE_ID_IMAGES, RULE_ID_SCHOLAR, RULE_ID_SHOPPING,
+];
 const ALARM_NAME    = 'nid-rotation';
 const COUNTER_ALARM = 'counter-update';
 const ROTATION_DAYS = 3;
@@ -20,10 +26,22 @@ const DEFAULT_SETTINGS = {
   blockMaps: true,
   blockYouTube: false,
   blockNews: true,
+  blockImages: true,
+  blockScholar: true,
+  blockShopping: true,
 };
 
 let settings = { ...DEFAULT_SETTINGS };
 let rebuildTimer = null;
+
+// ── Badge ─────────────────────────────────────────────────────────────────────
+
+function updateBadge() {
+  const on = settings.enabled;
+  chrome.action.setBadgeText({ text: on ? 'ON' : 'OFF' });
+  chrome.action.setBadgeBackgroundColor({ color: on ? '#34a853' : '#ea4335' });
+  chrome.action.setBadgeTextColor({ color: '#ffffff' });
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -36,7 +54,6 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (settings.spoofNID && !stored.fakeNID) {
     const nid = generateFakeNID();
     await chrome.storage.local.set({ fakeNID: nid });
-    // FIX #4: use 'lax' instead of 'no_restriction' to prevent cross-site tracking
     chrome.cookies.set({
       url: 'https://www.google.com',
       name: 'NID',
@@ -50,6 +67,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 
   await applyRules();
+  updateBadge();
   scheduleRotationAlarm();
   chrome.alarms.create(COUNTER_ALARM, { periodInMinutes: 1 });
 });
@@ -58,6 +76,7 @@ chrome.runtime.onStartup.addListener(async () => {
   const stored = await chrome.storage.local.get(Object.keys(DEFAULT_SETTINGS));
   settings = { ...DEFAULT_SETTINGS, ...stored };
   await applyRules();
+  updateBadge();
   scheduleRotationAlarm();
   chrome.alarms.create(COUNTER_ALARM, { periodInMinutes: 1 });
 });
@@ -71,6 +90,7 @@ chrome.storage.onChanged.addListener(async (changes) => {
     }
   }
   if (needsUpdate) {
+    updateBadge();
     scheduleRebuild();
     if ('spoofNID' in changes) {
       scheduleRotationAlarm();
@@ -81,7 +101,8 @@ chrome.storage.onChanged.addListener(async (changes) => {
 // Listen for cookie changes on google.com / youtube.com to keep rules fresh
 chrome.cookies.onChanged.addListener((changeInfo) => {
   const domain = changeInfo.cookie.domain;
-  if (domain.endsWith('google.com') || domain.endsWith('youtube.com')) {
+  if (domain.endsWith('.google.com') || domain === 'google.com' ||
+      domain.endsWith('.youtube.com') || domain === 'youtube.com') {
     scheduleRebuild();
   }
 });
@@ -123,7 +144,6 @@ async function updateCounter() {
     const result = await chrome.declarativeNetRequest.getMatchedRules({
       minTimeStamp: lastCheck,
     });
-    // FIX #7: only count by ruleId, ignore tabId/timestamp metadata
     const newMatches = (result.rulesMatchedInfo || []).filter(m =>
       ALL_RULE_IDS.includes(m.rule.ruleId)
     ).length;
@@ -144,7 +164,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (!settings.spoofNID) return;
     const nid = generateFakeNID();
     await chrome.storage.local.set({ fakeNID: nid, lastNIDRotation: Date.now() });
-    // FIX #4: use 'lax' instead of 'no_restriction'
     chrome.cookies.set({
       url: 'https://www.google.com',
       name: 'NID',
@@ -211,7 +230,6 @@ async function getCleanCookieHeader(queryUrl = 'https://www.google.com/search') 
 }
 
 // Helper: build a modifyHeaders rule
-// FIX #1: use precise initiatorDomains + regexFilter instead of broad urlFilter strings
 function makeHeaderRule(id, regexFilter, initiatorDomains, cookieValue, extraHeaders = []) {
   return {
     id,
@@ -238,22 +256,23 @@ async function applyRules() {
   const toAdd    = [];
 
   if (settings.enabled) {
-    // FIX #6: randomise minor UA version tokens per session to avoid static-string fingerprint
     const uaHeader = settings.spoofUserAgent
-      ? [{ header: 'User-Agent', operation: 'set',
-           value: buildRandomUA() }]
+      ? [{ header: 'User-Agent', operation: 'set', value: buildRandomUA() }]
       : [];
 
     // Fetch cookie headers for all enabled domains in parallel
-    const [searchCookies, mapsCookies, youtubeCookies, newsCookies] = await Promise.all([
+    const [searchCookies, mapsCookies, youtubeCookies, newsCookies,
+           imagesCookies, scholarCookies, shoppingCookies] = await Promise.all([
       getCleanCookieHeader('https://www.google.com/search'),
-      settings.blockMaps    ? getCleanCookieHeader('https://maps.google.com/')  : Promise.resolve(null),
-      settings.blockYouTube ? getCleanCookieHeader('https://www.youtube.com/') : Promise.resolve(null),
-      settings.blockNews    ? getCleanCookieHeader('https://news.google.com/')  : Promise.resolve(null),
+      settings.blockMaps     ? getCleanCookieHeader('https://maps.google.com/')     : Promise.resolve(null),
+      settings.blockYouTube  ? getCleanCookieHeader('https://www.youtube.com/')      : Promise.resolve(null),
+      settings.blockNews     ? getCleanCookieHeader('https://news.google.com/')      : Promise.resolve(null),
+      settings.blockImages   ? getCleanCookieHeader('https://images.google.com/')    : Promise.resolve(null),
+      settings.blockScholar  ? getCleanCookieHeader('https://scholar.google.com/')   : Promise.resolve(null),
+      settings.blockShopping ? getCleanCookieHeader('https://shopping.google.com/')  : Promise.resolve(null),
     ]);
 
-    // FIX #1: scope each rule tightly with regexFilter + initiatorDomains
-    // Rule 1: Google Search only (/search path on google.com)
+    // Rule 1: Google Search (/search path on google.com)
     toAdd.push(makeHeaderRule(
       RULE_ID_REMOVE,
       'https://[^/]*\\.google\\.com/search',
@@ -311,6 +330,39 @@ async function applyRules() {
         uaHeader
       ));
     }
+
+    // Rule 6: Google Images
+    if (settings.blockImages && imagesCookies !== null) {
+      toAdd.push(makeHeaderRule(
+        RULE_ID_IMAGES,
+        'https://images\\.google\\.com/',
+        ['google.com'],
+        imagesCookies,
+        uaHeader
+      ));
+    }
+
+    // Rule 7: Google Scholar
+    if (settings.blockScholar && scholarCookies !== null) {
+      toAdd.push(makeHeaderRule(
+        RULE_ID_SCHOLAR,
+        'https://scholar\\.google\\.com/',
+        ['google.com'],
+        scholarCookies,
+        uaHeader
+      ));
+    }
+
+    // Rule 8: Google Shopping
+    if (settings.blockShopping && shoppingCookies !== null) {
+      toAdd.push(makeHeaderRule(
+        RULE_ID_SHOPPING,
+        'https://shopping\\.google\\.com/',
+        ['google.com'],
+        shoppingCookies,
+        uaHeader
+      ));
+    }
   }
 
   await chrome.declarativeNetRequest.updateDynamicRules({
@@ -334,7 +386,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // Generates a plausible-looking NID value (same format as real NID)
-// NID format: "<version>=<base64url-like string>"
 function generateFakeNID() {
   const version = Math.floor(Math.random() * 100 + 500);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -346,9 +397,9 @@ function generateFakeNID() {
   return `${version}=${str}`;
 }
 
-// FIX #6: randomise minor Firefox version to avoid static UA fingerprint
+// Randomise minor Firefox version to avoid static UA fingerprint
 function buildRandomUA() {
-  const rv  = 115 + Math.floor(Math.random() * 20);   // e.g. 115..134
+  const rv  = 115 + Math.floor(Math.random() * 20);
   const ver = rv + '.0';
   return `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:${ver}) Gecko/20100101 Firefox/${ver}`;
 }

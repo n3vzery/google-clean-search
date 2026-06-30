@@ -2,36 +2,43 @@
 
 const $ = (id) => document.getElementById(id);
 
-const togEnabled  = $('togEnabled');
-const togXClient  = $('togXClient');
-const togNID      = $('togNID');
-const togUA       = $('togUA');
-const togMaps     = $('togMaps');
-const togYouTube  = $('togYouTube');
-const togNews     = $('togNews');
-const nidPreview  = $('nidPreview');
-const btnRegen    = $('btnRegen');
-const statusBar   = $('statusBar');
-const statusDot   = $('statusDot');
-const statusText  = $('statusText');
-const nidBox      = $('nidBox');
-const nidLabel    = $('nidSectionLabel');
+const togEnabled   = $('togEnabled');
+const togXClient   = $('togXClient');
+const togNID       = $('togNID');
+const togUA        = $('togUA');
+const togMaps      = $('togMaps');
+const togYouTube   = $('togYouTube');
+const togNews      = $('togNews');
+const togImages    = $('togImages');
+const togScholar   = $('togScholar');
+const togShopping  = $('togShopping');
+const nidPreview   = $('nidPreview');
+const btnRegen     = $('btnRegen');
+const statusBar    = $('statusBar');
+const statusDot    = $('statusDot');
+const statusText   = $('statusText');
+const nidBox       = $('nidBox');
+const nidLabel     = $('nidSectionLabel');
 const nidNextRotation = $('nidNextRotation');
-const counterEl   = $('requestCounter');
+const counterEl    = $('requestCounter');
 
 // Load settings and update UI
 function loadSettings() {
   chrome.storage.local.get(
     ['enabled', 'spoofNID', 'removeXClientData', 'fakeNID', 'spoofUserAgent',
-     'blockMaps', 'blockYouTube', 'blockNews', 'totalProtected'],
+     'blockMaps', 'blockYouTube', 'blockNews', 'blockImages', 'blockScholar',
+     'blockShopping', 'totalProtected'],
     (data) => {
-      togEnabled.checked  = data.enabled !== false;
-      togXClient.checked  = data.removeXClientData !== false;
-      togNID.checked      = data.spoofNID !== false;
-      togUA.checked       = data.spoofUserAgent === true;
-      togMaps.checked     = data.blockMaps !== false;
-      togYouTube.checked  = data.blockYouTube === true;
-      togNews.checked     = data.blockNews !== false;
+      togEnabled.checked   = data.enabled !== false;
+      togXClient.checked   = data.removeXClientData !== false;
+      togNID.checked       = data.spoofNID !== false;
+      togUA.checked        = data.spoofUserAgent === true;
+      togMaps.checked      = data.blockMaps !== false;
+      togYouTube.checked   = data.blockYouTube === true;
+      togNews.checked      = data.blockNews !== false;
+      togImages.checked    = data.blockImages !== false;
+      togScholar.checked   = data.blockScholar !== false;
+      togShopping.checked  = data.blockShopping !== false;
       nidPreview.textContent = data.fakeNID ? data.fakeNID.substring(0, 30) + '...' : 'not set';
 
       updateStatus();
@@ -54,7 +61,11 @@ function renderCookieList() {
     const cookiesList = $('cookiesList');
 
     if (data.enabled === false) {
-      cookiesList.innerHTML = '<div style="color: #555; font-style: italic;">Protection disabled (Raw cookies sent)</div>';
+      cookiesList.replaceChildren();
+      const msg = document.createElement('div');
+      msg.style.cssText = 'color:rgba(255,255,255,0.25);font-style:italic;';
+      msg.textContent   = 'Protection disabled (Raw cookies sent)';
+      cookiesList.appendChild(msg);
       return;
     }
 
@@ -92,7 +103,11 @@ function renderCookieList() {
       }
 
       if (cleanCookies.length === 0) {
-        cookiesList.innerHTML = '<div style="color: #555; font-style: italic;">None (Cookie header removed)</div>';
+        cookiesList.replaceChildren();
+        const msg = document.createElement('div');
+        msg.style.cssText = 'color:rgba(255,255,255,0.25);font-style:italic;';
+        msg.textContent   = 'None (Cookie header removed)';
+        cookiesList.appendChild(msg);
         return;
       }
 
@@ -102,7 +117,7 @@ function renderCookieList() {
         return a.name.localeCompare(b.name);
       });
 
-      cookiesList.innerHTML = '';
+      cookiesList.replaceChildren();
       for (const c of cleanCookies) {
         const truncated = c.value.length > 22 ? c.value.substring(0, 22) + '...' : c.value;
 
@@ -132,7 +147,6 @@ function renderCookieList() {
     });
   });
 }
-
 
 // ── Toggle listeners ──────────────────────────────────────────────────────────
 
@@ -173,6 +187,18 @@ togNews.addEventListener('change', () => {
   chrome.storage.local.set({ blockNews: togNews.checked });
 });
 
+togImages.addEventListener('change', () => {
+  chrome.storage.local.set({ blockImages: togImages.checked });
+});
+
+togScholar.addEventListener('change', () => {
+  chrome.storage.local.set({ blockScholar: togScholar.checked });
+});
+
+togShopping.addEventListener('change', () => {
+  chrome.storage.local.set({ blockShopping: togShopping.checked });
+});
+
 // ── NID management ────────────────────────────────────────────────────────────
 
 btnRegen.addEventListener('click', regenNID);
@@ -192,11 +218,10 @@ function regenNID() {
       domain: '.google.com',
       path: '/',
       secure: true,
-      sameSite: 'no_restriction',
+      sameSite: 'lax',
       expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
     });
 
-    // Reset the rotation alarm so the 3-day timer restarts from now
     chrome.alarms.clear('nid-rotation', () => {
       chrome.alarms.create('nid-rotation', {
         delayInMinutes: 3 * 24 * 60,
@@ -207,18 +232,17 @@ function regenNID() {
   });
 }
 
-// Show how much time is left until next NID auto-rotation
 function updateNextRotation() {
   if (!nidNextRotation) return;
   if (!togNID.checked) {
     nidNextRotation.textContent = 'disabled';
-    nidNextRotation.style.color = '#555';
+    nidNextRotation.style.color = 'rgba(255,255,255,0.25)';
     return;
   }
   chrome.alarms.get('nid-rotation', (alarm) => {
     if (!alarm) {
       nidNextRotation.textContent = 'not scheduled';
-      nidNextRotation.style.color = '#555';
+      nidNextRotation.style.color = 'rgba(255,255,255,0.25)';
       return;
     }
     const msLeft    = alarm.scheduledTime - Date.now();
@@ -249,13 +273,16 @@ function updateNIDVisibility() {
 
 // Listen to storage changes to keep popup in sync
 chrome.storage.onChanged.addListener((changes) => {
-  if ('enabled'           in changes) togEnabled.checked  = changes.enabled.newValue !== false;
-  if ('spoofNID'          in changes) togNID.checked      = changes.spoofNID.newValue !== false;
-  if ('removeXClientData' in changes) togXClient.checked  = changes.removeXClientData.newValue !== false;
-  if ('spoofUserAgent'    in changes) togUA.checked       = changes.spoofUserAgent.newValue === true;
-  if ('blockMaps'         in changes) togMaps.checked     = changes.blockMaps.newValue !== false;
-  if ('blockYouTube'      in changes) togYouTube.checked  = changes.blockYouTube.newValue === true;
-  if ('blockNews'         in changes) togNews.checked     = changes.blockNews.newValue !== false;
+  if ('enabled'           in changes) togEnabled.checked   = changes.enabled.newValue !== false;
+  if ('spoofNID'          in changes) togNID.checked       = changes.spoofNID.newValue !== false;
+  if ('removeXClientData' in changes) togXClient.checked   = changes.removeXClientData.newValue !== false;
+  if ('spoofUserAgent'    in changes) togUA.checked        = changes.spoofUserAgent.newValue === true;
+  if ('blockMaps'         in changes) togMaps.checked      = changes.blockMaps.newValue !== false;
+  if ('blockYouTube'      in changes) togYouTube.checked   = changes.blockYouTube.newValue === true;
+  if ('blockNews'         in changes) togNews.checked      = changes.blockNews.newValue !== false;
+  if ('blockImages'       in changes) togImages.checked    = changes.blockImages.newValue !== false;
+  if ('blockScholar'      in changes) togScholar.checked   = changes.blockScholar.newValue !== false;
+  if ('blockShopping'     in changes) togShopping.checked  = changes.blockShopping.newValue !== false;
   if ('fakeNID' in changes && changes.fakeNID.newValue) {
     nidPreview.textContent = changes.fakeNID.newValue.substring(0, 30) + '...';
   }

@@ -3,179 +3,295 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      width: 300px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #111;
+      width: 340px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f;
       color: #e0e0e0;
-      padding: 0 0 12px;
+      padding: 0;
+      overflow-x: hidden;
     }
 
+    /* ── Header ──────────────────────────────── */
     .header {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid #222;
+      gap: 12px;
+      padding: 18px 20px 16px;
+      background: linear-gradient(135deg, #0f1118 0%, #131620 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(66,133,244,0.08) 0%, transparent 70%);
+      pointer-events: none;
     }
     .logo {
-      width: 30px; height: 30px;
-      background: #1a73e8;
-      border-radius: 8px;
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700; color: #fff;
+      font-size: 16px; font-weight: 700; color: #fff;
       flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(66,133,244,0.25);
     }
-    .header-text h1 { font-size: 14px; font-weight: 600; color: #fff; }
-    .header-text p  { font-size: 11px; color: #666; margin-top: 2px; }
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0f0f0;
+      letter-spacing: -0.01em;
+    }
+    .header-text p {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 2px;
+      font-weight: 400;
+    }
 
+    /* ── Status bar ──────────────────────────── */
     .status-bar {
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 9px 16px;
+      gap: 8px;
+      padding: 10px 20px;
       font-size: 12px;
-      border-bottom: 1px solid #1a1a1a;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.3s;
+    }
+    .status-bar.on {
+      background: rgba(52,168,83,0.06);
+      color: #34a853;
+    }
+    .status-bar.off {
+      background: rgba(234,67,53,0.06);
+      color: #ea4335;
     }
     .dot {
       width: 7px; height: 7px;
       border-radius: 50%;
       flex-shrink: 0;
+      transition: background 0.3s, box-shadow 0.3s;
     }
-    .dot.on  { background: #34a853; }
-    .dot.off { background: #ea4335; }
-    .status-bar.on  { color: #34a853; }
-    .status-bar.off { color: #ea4335; }
+    .dot.on {
+      background: #34a853;
+      box-shadow: 0 0 8px rgba(52,168,83,0.5);
+    }
+    .dot.off {
+      background: #ea4335;
+      box-shadow: 0 0 8px rgba(234,67,53,0.3);
+    }
 
-    /* Request counter bar */
+    /* ── Counter bar ─────────────────────────── */
     .counter-bar {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 16px;
+      gap: 8px;
+      padding: 8px 20px;
       font-size: 11px;
-      color: #444;
-      border-bottom: 1px solid #1a1a1a;
-      background: #0d0d0d;
+      color: rgba(255,255,255,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.01);
     }
+    .counter-bar .shield { font-size: 13px; opacity: 0.6; }
     .counter-bar .count {
-      color: #888;
+      color: rgba(255,255,255,0.55);
       font-weight: 600;
       font-variant-numeric: tabular-nums;
+      font-size: 12px;
     }
 
+    /* ── Section labels ──────────────────────── */
     .section-label {
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .06em;
-      color: #444;
-      padding: 14px 16px 6px;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.2);
+      padding: 16px 20px 8px;
     }
 
+    /* ── Rows ─────────────────────────────────── */
     .row {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      padding: 10px 16px;
-      border-bottom: 1px solid #1a1a1a;
+      gap: 14px;
+      padding: 11px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.15s;
     }
+    .row:hover { background: rgba(255,255,255,0.015); }
     .row:last-child { border-bottom: none; }
-
     .row-text { flex: 1; }
-    .row-text strong { font-size: 13px; font-weight: 500; color: #ddd; display: block; }
-    .row-text span   { font-size: 11px; color: #555; margin-top: 2px; display: block; line-height: 1.5; }
+    .row-text strong {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+      display: block;
+      line-height: 1.3;
+    }
+    .row-text span {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 3px;
+      display: block;
+      line-height: 1.45;
+    }
 
-    /* Service badges */
+    /* ── Service tags ─────────────────────────── */
     .tag {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       font-size: 9px;
       font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-right: 4px;
-      letter-spacing: .02em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 6px;
+      letter-spacing: 0.03em;
       vertical-align: middle;
+      text-transform: uppercase;
     }
-    .tag-maps    { background: #1a3a1a; color: #34a853; border: 1px solid #1e4a1e; }
-    .tag-youtube { background: #3a1a1a; color: #ea4335; border: 1px solid #4a1e1e; }
-    .tag-news    { background: #1a2a3a; color: #4285f4; border: 1px solid #1e3a4a; }
+    .tag-maps {
+      background: rgba(52,168,83,0.1);
+      color: #34a853;
+      border: 1px solid rgba(52,168,83,0.15);
+    }
+    .tag-youtube {
+      background: rgba(234,67,53,0.1);
+      color: #ea4335;
+      border: 1px solid rgba(234,67,53,0.15);
+    }
+    .tag-news {
+      background: rgba(66,133,244,0.1);
+      color: #4285f4;
+      border: 1px solid rgba(66,133,244,0.15);
+    }
+    .tag-images {
+      background: rgba(251,188,4,0.1);
+      color: #fbbc04;
+      border: 1px solid rgba(251,188,4,0.15);
+    }
+    .tag-scholar {
+      background: rgba(66,133,244,0.1);
+      color: #6ea8fe;
+      border: 1px solid rgba(66,133,244,0.15);
+    }
+    .tag-shopping {
+      background: rgba(52,168,83,0.1);
+      color: #81c995;
+      border: 1px solid rgba(52,168,83,0.15);
+    }
 
-    /* Toggle switch */
-    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; margin-top: 1px; }
+    /* ── Toggle switch ────────────────────────── */
+    .toggle {
+      position: relative;
+      width: 40px; height: 22px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
     .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
     .slider {
       position: absolute; inset: 0;
-      background: #2a2a2a;
-      border: 1px solid #333;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 22px;
       cursor: pointer;
-      transition: background .18s, border-color .18s;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .slider::before {
       content: '';
       position: absolute;
       width: 16px; height: 16px;
       left: 2px; top: 2px;
-      background: #555;
+      background: rgba(255,255,255,0.35);
       border-radius: 50%;
-      transition: transform .18s, background .18s;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    input:checked + .slider { background: #1a73e8; border-color: #1a73e8; }
-    input:checked + .slider::before { transform: translateX(16px); background: #fff; }
+    input:checked + .slider {
+      background: rgba(66,133,244,0.85);
+      border-color: rgba(66,133,244,0.4);
+      box-shadow: 0 0 12px rgba(66,133,244,0.2);
+    }
+    input:checked + .slider::before {
+      transform: translateX(18px);
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
 
-    /* NID spoof section */
+    /* ── NID section ──────────────────────────── */
     .nid-box {
-      margin: 0 16px 4px;
-      background: #181818;
-      border: 1px solid #222;
-      border-radius: 8px;
+      margin: 0 20px 6px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
       overflow: hidden;
     }
     .nid-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 9px 12px;
-      border-bottom: 1px solid #1e1e1e;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
     }
     .nid-row:last-child { border-bottom: none; }
-    .nid-label { font-size: 11px; color: #555; flex: 1; }
+    .nid-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      flex: 1;
+    }
     .nid-value {
       font-size: 10px;
-      color: #888;
-      font-family: monospace;
+      color: rgba(255,255,255,0.5);
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
       max-width: 140px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    /* ── Buttons ──────────────────────────────── */
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 5px 11px;
-      border-radius: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
-      border: 1px solid #2a2a2a;
-      background: #1e1e1e;
-      color: #aaa;
-      transition: background .15s, color .15s;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.5);
+      transition: all 0.2s;
     }
-    .btn:hover { background: #252525; color: #ddd; }
+    .btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.8);
+    }
+    .btn:active { transform: scale(0.97); }
     .btn.primary {
-      background: #1a3a6e;
-      border-color: #1a73e8;
+      background: rgba(66,133,244,0.15);
+      border-color: rgba(66,133,244,0.25);
       color: #7ab4f5;
     }
-    .btn.primary:hover { background: #1f4585; color: #a8cff7; }
+    .btn.primary:hover {
+      background: rgba(66,133,244,0.25);
+      color: #a8cff7;
+      box-shadow: 0 0 16px rgba(66,133,244,0.1);
+    }
 
-    /* Cookies table styles */
+    /* ── Cookies box ──────────────────────────── */
     .cookie-item {
       padding: 5px 0;
       display: flex;
@@ -184,7 +300,7 @@
       gap: 8px;
     }
     .cookie-item + .cookie-item {
-      border-top: 1px dashed #222;
+      border-top: 1px solid rgba(255,255,255,0.03);
     }
     .cookie-name {
       color: #4285f4;
@@ -193,9 +309,9 @@
       flex-shrink: 0;
     }
     .cookie-value {
-      color: #888;
+      color: rgba(255,255,255,0.35);
       font-size: 10px;
-      font-family: monospace;
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -203,25 +319,31 @@
       max-width: 150px;
     }
 
+    /* ── Footer ───────────────────────────────── */
     .note {
       font-size: 10px;
-      color: #3a3a3a;
-      padding: 10px 16px 0;
+      color: rgba(255,255,255,0.12);
+      padding: 12px 20px 0;
       line-height: 1.6;
     }
     .footer {
       text-align: center;
       margin-top: 14px;
+      padding-bottom: 16px;
       font-size: 10px;
-      color: #444;
+      color: rgba(255,255,255,0.15);
     }
     .footer a {
-      color: #666;
+      color: rgba(255,255,255,0.3);
       text-decoration: none;
-      transition: color .15s;
+      transition: color 0.2s;
     }
-    .footer a:hover {
-      color: #1a73e8;
+    .footer a:hover { color: #4285f4; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+      margin: 0 20px;
     }
   </style>
 </head>
@@ -241,10 +363,11 @@
   </div>
 
   <div class="counter-bar">
-    <span>🛡</span>
+    <span class="shield">🛡</span>
     <span><span class="count" id="requestCounter">0</span> requests protected</span>
   </div>
 
+  <!-- Protection -->
   <div class="section-label">Protection</div>
 
   <div class="row">
@@ -272,7 +395,7 @@
   <div class="row">
     <div class="row-text">
       <strong>Spoof NID cookie</strong>
-      <span>Replace NID with a random value so Google sees a different anonymous user. Reduces captchas.</span>
+      <span>Replace NID with a random value so Google sees a different anonymous user</span>
     </div>
     <label class="toggle">
       <input type="checkbox" id="togNID">
@@ -283,7 +406,7 @@
   <div class="row">
     <div class="row-text">
       <strong>Spoof User-Agent</strong>
-      <span>Identify as Firefox on search requests to prevent browser profiling.</span>
+      <span>Identify as Firefox to prevent browser profiling</span>
     </div>
     <label class="toggle">
       <input type="checkbox" id="togUA">
@@ -291,12 +414,15 @@
     </label>
   </div>
 
+  <div class="divider"></div>
+
+  <!-- Protected Services -->
   <div class="section-label">Protected Services</div>
 
   <div class="row">
     <div class="row-text">
-      <strong><span class="tag tag-maps">Maps</span>Google Maps</strong>
-      <span>Filter account cookies on maps.google.com</span>
+      <strong><span class="tag tag-maps">Maps</span> Google Maps</strong>
+      <span>Filter cookies on maps.google.com</span>
     </div>
     <label class="toggle">
       <input type="checkbox" id="togMaps">
@@ -306,8 +432,19 @@
 
   <div class="row">
     <div class="row-text">
-      <strong><span class="tag tag-news">News</span>Google News</strong>
-      <span>Filter account cookies on news.google.com</span>
+      <strong><span class="tag tag-images">Images</span> Google Images</strong>
+      <span>Filter cookies on images.google.com</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togImages">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-news">News</span> Google News</strong>
+      <span>Filter cookies on news.google.com</span>
     </div>
     <label class="toggle">
       <input type="checkbox" id="togNews">
@@ -317,8 +454,30 @@
 
   <div class="row">
     <div class="row-text">
-      <strong><span class="tag tag-youtube">YouTube</span>YouTube</strong>
-      <span>Filter account cookies on youtube.com. May affect recommendations.</span>
+      <strong><span class="tag tag-scholar">Scholar</span> Google Scholar</strong>
+      <span>Filter cookies on scholar.google.com</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togScholar">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-shopping">Shop</span> Google Shopping</strong>
+      <span>Filter cookies on shopping.google.com</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togShopping">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-youtube">YT</span> YouTube</strong>
+      <span>Filter cookies on youtube.com</span>
     </div>
     <label class="toggle">
       <input type="checkbox" id="togYouTube">
@@ -326,7 +485,10 @@
     </label>
   </div>
 
-  <div class="section-label" id="nidSectionLabel">NID value</div>
+  <div class="divider"></div>
+
+  <!-- NID -->
+  <div class="section-label" id="nidSectionLabel">NID Spoofing</div>
 
   <div class="nid-box" id="nidBox">
     <div class="nid-row">
@@ -334,27 +496,28 @@
       <span class="nid-value" id="nidPreview">not set</span>
     </div>
     <div class="nid-row">
-      <span class="nid-label">Regenerate a new random NID</span>
+      <span class="nid-label">Generate new NID</span>
       <button class="btn primary" id="btnRegen">Regenerate</button>
     </div>
     <div class="nid-row">
-      <span class="nid-label">Auto-rotate every 3 days</span>
+      <span class="nid-label">Auto-rotation</span>
       <span class="nid-value" id="nidNextRotation" style="color: #34a853;">calculating...</span>
     </div>
   </div>
 
-  <div class="section-label" id="cookiesSectionLabel">Allowed Cookies on Search</div>
-  <div class="nid-box" id="cookiesBox" style="padding: 10px 12px; font-size: 11px; color: #aaa; line-height: 1.4; max-height: 80px; overflow-y: auto; word-break: break-all;">
+  <!-- Cookies -->
+  <div class="section-label" id="cookiesSectionLabel">Allowed Cookies</div>
+  <div class="nid-box" id="cookiesBox" style="padding: 10px 14px; font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.4; max-height: 80px; overflow-y: auto; word-break: break-all;">
     <div id="cookiesList">None</div>
   </div>
 
   <p class="note">
-    NID is not cryptographically signed, Google accepts any value.
+    NID is not cryptographically signed - Google accepts any value.
     Account cookies (SID, HSID, SAPISID etc.) are removed entirely.
   </p>
 
   <div class="footer">
-    by <a href="https://github.com/n3vzery" target="_blank">n3vzery</a>
+    by <a href="https://github.com/n3vzery" target="_blank" rel="noopener noreferrer">n3vzery</a>
   </div>
 
   <script src="popup.js"></script>

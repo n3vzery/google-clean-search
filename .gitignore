@@ -1,6 +1,8 @@
 # Build artifacts
 *.zip
 *.crx
+*.pem
+build/
 
 # OS / editor
 .DS_Store

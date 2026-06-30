@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Clean Search",
-  "version": "3.5",
+  "version": "3.7",
   "description": "Removes account cookies from Google search requests. Keeps you logged in.",
 
   "permissions": [
@@ -16,7 +16,8 @@
     "https://*.google.com/*",
     "https://google.com/*",
     "https://www.youtube.com/*",
-    "https://youtube.com/*"
+    "https://youtube.com/*",
+    "https://chromewebstore.google.com/*"
   ],
 
   "background": {
