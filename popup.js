@@ -12,6 +12,7 @@ const togNews      = $('togNews');
 const togImages    = $('togImages');
 const togScholar   = $('togScholar');
 const togShopping  = $('togShopping');
+const togWebStore  = $('togWebStore');
 const nidPreview   = $('nidPreview');
 const btnRegen     = $('btnRegen');
 const statusBar    = $('statusBar');
@@ -27,7 +28,7 @@ function loadSettings() {
   chrome.storage.local.get(
     ['enabled', 'spoofNID', 'removeXClientData', 'fakeNID', 'spoofUserAgent',
      'blockMaps', 'blockYouTube', 'blockNews', 'blockImages', 'blockScholar',
-     'blockShopping', 'totalProtected'],
+     'blockShopping', 'blockWebStore', 'totalProtected'],
     (data) => {
       togEnabled.checked   = data.enabled !== false;
       togXClient.checked   = data.removeXClientData !== false;
@@ -39,6 +40,7 @@ function loadSettings() {
       togImages.checked    = data.blockImages !== false;
       togScholar.checked   = data.blockScholar !== false;
       togShopping.checked  = data.blockShopping !== false;
+      togWebStore.checked  = data.blockWebStore !== false;
       nidPreview.textContent = data.fakeNID ? data.fakeNID.substring(0, 30) + '...' : 'not set';
 
       updateStatus();
@@ -199,6 +201,10 @@ togShopping.addEventListener('change', () => {
   chrome.storage.local.set({ blockShopping: togShopping.checked });
 });
 
+togWebStore.addEventListener('change', () => {
+  chrome.storage.local.set({ blockWebStore: togWebStore.checked });
+});
+
 // ── NID management ────────────────────────────────────────────────────────────
 
 btnRegen.addEventListener('click', regenNID);
@@ -283,6 +289,7 @@ chrome.storage.onChanged.addListener((changes) => {
   if ('blockImages'       in changes) togImages.checked    = changes.blockImages.newValue !== false;
   if ('blockScholar'      in changes) togScholar.checked   = changes.blockScholar.newValue !== false;
   if ('blockShopping'     in changes) togShopping.checked  = changes.blockShopping.newValue !== false;
+  if ('blockWebStore'     in changes) togWebStore.checked  = changes.blockWebStore.newValue !== false;
   if ('fakeNID' in changes && changes.fakeNID.newValue) {
     nidPreview.textContent = changes.fakeNID.newValue.substring(0, 30) + '...';
   }

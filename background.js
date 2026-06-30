@@ -1,17 +1,19 @@
 'use strict';
 
-const RULE_ID_REMOVE   = 1;
-const RULE_ID_XCLIENT  = 2;
-const RULE_ID_MAPS     = 3;
-const RULE_ID_YOUTUBE  = 4;
-const RULE_ID_NEWS     = 5;
-const RULE_ID_IMAGES   = 6;
-const RULE_ID_SCHOLAR  = 7;
-const RULE_ID_SHOPPING = 8;
+const RULE_ID_REMOVE     = 1;
+const RULE_ID_XCLIENT    = 2;
+const RULE_ID_MAPS       = 3;
+const RULE_ID_YOUTUBE    = 4;
+const RULE_ID_NEWS       = 5;
+const RULE_ID_IMAGES     = 6;
+const RULE_ID_SCHOLAR    = 7;
+const RULE_ID_SHOPPING   = 8;
+const RULE_ID_WEBSTORE   = 9;
 
 const ALL_RULE_IDS  = [
   RULE_ID_REMOVE, RULE_ID_XCLIENT, RULE_ID_MAPS, RULE_ID_YOUTUBE,
   RULE_ID_NEWS, RULE_ID_IMAGES, RULE_ID_SCHOLAR, RULE_ID_SHOPPING,
+  RULE_ID_WEBSTORE,
 ];
 const ALARM_NAME    = 'nid-rotation';
 const COUNTER_ALARM = 'counter-update';
@@ -29,6 +31,7 @@ const DEFAULT_SETTINGS = {
   blockImages: true,
   blockScholar: true,
   blockShopping: true,
+  blockWebStore: true,
 };
 
 let settings = { ...DEFAULT_SETTINGS };
@@ -262,7 +265,7 @@ async function applyRules() {
 
     // Fetch cookie headers for all enabled domains in parallel
     const [searchCookies, mapsCookies, youtubeCookies, newsCookies,
-           imagesCookies, scholarCookies, shoppingCookies] = await Promise.all([
+           imagesCookies, scholarCookies, shoppingCookies, webstoreCookies] = await Promise.all([
       getCleanCookieHeader('https://www.google.com/search'),
       settings.blockMaps     ? getCleanCookieHeader('https://maps.google.com/')     : Promise.resolve(null),
       settings.blockYouTube  ? getCleanCookieHeader('https://www.youtube.com/')      : Promise.resolve(null),
@@ -270,6 +273,7 @@ async function applyRules() {
       settings.blockImages   ? getCleanCookieHeader('https://images.google.com/')    : Promise.resolve(null),
       settings.blockScholar  ? getCleanCookieHeader('https://scholar.google.com/')   : Promise.resolve(null),
       settings.blockShopping ? getCleanCookieHeader('https://shopping.google.com/')  : Promise.resolve(null),
+      settings.blockWebStore ? getCleanCookieHeader('https://chromewebstore.google.com/') : Promise.resolve(null),
     ]);
 
     // Rule 1: Google Search (/search path on google.com)
@@ -360,6 +364,17 @@ async function applyRules() {
         'https://shopping\\.google\\.com/',
         ['google.com'],
         shoppingCookies,
+        uaHeader
+      ));
+    }
+
+    // Rule 9: Chrome Web Store
+    if (settings.blockWebStore && webstoreCookies !== null) {
+      toAdd.push(makeHeaderRule(
+        RULE_ID_WEBSTORE,
+        'https://chromewebstore\\.google\\.com/',
+        ['google.com'],
+        webstoreCookies,
         uaHeader
       ));
     }
