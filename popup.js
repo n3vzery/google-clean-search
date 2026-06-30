@@ -13,6 +13,7 @@ const togImages    = $('togImages');
 const togScholar   = $('togScholar');
 const togShopping  = $('togShopping');
 const togWebStore  = $('togWebStore');
+const togSafeSearch = $('togSafeSearch');
 const nidPreview   = $('nidPreview');
 const btnRegen     = $('btnRegen');
 const statusBar    = $('statusBar');
@@ -28,12 +29,13 @@ function loadSettings() {
   chrome.storage.local.get(
     ['enabled', 'spoofNID', 'removeXClientData', 'fakeNID', 'spoofUserAgent',
      'blockMaps', 'blockYouTube', 'blockNews', 'blockImages', 'blockScholar',
-     'blockShopping', 'blockWebStore', 'totalProtected'],
+     'blockShopping', 'blockWebStore', 'bypassSafeSearch', 'totalProtected'],
     (data) => {
       togEnabled.checked   = data.enabled !== false;
       togXClient.checked   = data.removeXClientData !== false;
       togNID.checked       = data.spoofNID !== false;
       togUA.checked        = data.spoofUserAgent === true;
+      togSafeSearch.checked = data.bypassSafeSearch !== false;
       togMaps.checked      = data.blockMaps !== false;
       togYouTube.checked   = data.blockYouTube === true;
       togNews.checked      = data.blockNews !== false;
@@ -205,6 +207,10 @@ togWebStore.addEventListener('change', () => {
   chrome.storage.local.set({ blockWebStore: togWebStore.checked });
 });
 
+togSafeSearch.addEventListener('change', () => {
+  chrome.storage.local.set({ bypassSafeSearch: togSafeSearch.checked });
+});
+
 // ── NID management ────────────────────────────────────────────────────────────
 
 btnRegen.addEventListener('click', regenNID);
@@ -290,6 +296,7 @@ chrome.storage.onChanged.addListener((changes) => {
   if ('blockScholar'      in changes) togScholar.checked   = changes.blockScholar.newValue !== false;
   if ('blockShopping'     in changes) togShopping.checked  = changes.blockShopping.newValue !== false;
   if ('blockWebStore'     in changes) togWebStore.checked  = changes.blockWebStore.newValue !== false;
+  if ('bypassSafeSearch'  in changes) togSafeSearch.checked = changes.bypassSafeSearch.newValue !== false;
   if ('fakeNID' in changes && changes.fakeNID.newValue) {
     nidPreview.textContent = changes.fakeNID.newValue.substring(0, 30) + '...';
   }

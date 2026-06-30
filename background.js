@@ -9,11 +9,12 @@ const RULE_ID_IMAGES     = 6;
 const RULE_ID_SCHOLAR    = 7;
 const RULE_ID_SHOPPING   = 8;
 const RULE_ID_WEBSTORE   = 9;
+const RULE_ID_SAFESEARCH = 10;
 
 const ALL_RULE_IDS  = [
   RULE_ID_REMOVE, RULE_ID_XCLIENT, RULE_ID_MAPS, RULE_ID_YOUTUBE,
   RULE_ID_NEWS, RULE_ID_IMAGES, RULE_ID_SCHOLAR, RULE_ID_SHOPPING,
-  RULE_ID_WEBSTORE,
+  RULE_ID_WEBSTORE, RULE_ID_SAFESEARCH,
 ];
 const ALARM_NAME    = 'nid-rotation';
 const COUNTER_ALARM = 'counter-update';
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS = {
   spoofNID: true,
   removeXClientData: true,
   spoofUserAgent: false,
+  bypassSafeSearch: true, // New setting: SafeSearch Bypass
   blockMaps: true,
   blockYouTube: false,
   blockNews: true,
@@ -377,6 +379,29 @@ async function applyRules() {
         webstoreCookies,
         uaHeader
       ));
+    }
+
+    // Rule 10: SafeSearch Bypass (Redirect to add safe=off if missing or active)
+    if (settings.bypassSafeSearch) {
+      toAdd.push({
+        id: RULE_ID_SAFESEARCH,
+        priority: 2, // Higher priority to execute redirect transform before header modifications
+        action: {
+          type: 'redirect',
+          redirect: {
+            transform: {
+              queryTransform: {
+                addOrReplaceParams: [{ key: 'safe', value: 'off' }]
+              }
+            }
+          }
+        },
+        condition: {
+          // Trigger on Google search and images queries, but avoid loops: only redirect if safe parameter is NOT "off"
+          regexFilter: '^https://[^/]*\\.google\\.[a-z]+/(search|images|imgres)\\?(?!.*[?&]safe=off)(?=.*[?&]q=).*$',
+          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other']
+        }
+      });
     }
   }
 
