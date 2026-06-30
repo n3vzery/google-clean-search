@@ -36,6 +36,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (settings.spoofNID && !stored.fakeNID) {
     const nid = generateFakeNID();
     await chrome.storage.local.set({ fakeNID: nid });
+    // FIX #4: use 'lax' instead of 'no_restriction' to prevent cross-site tracking
     chrome.cookies.set({
       url: 'https://www.google.com',
       name: 'NID',
@@ -43,7 +44,7 @@ chrome.runtime.onInstalled.addListener(async () => {
       domain: '.google.com',
       path: '/',
       secure: true,
-      sameSite: 'no_restriction',
+      sameSite: 'lax',
       expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
     });
   }
@@ -120,8 +121,9 @@ async function updateCounter() {
 
   try {
     const result = await chrome.declarativeNetRequest.getMatchedRules({
-      minTimeStamp: lastCheck,   // correct Chrome API param name
+      minTimeStamp: lastCheck,
     });
+    // FIX #7: only count by ruleId, ignore tabId/timestamp metadata
     const newMatches = (result.rulesMatchedInfo || []).filter(m =>
       ALL_RULE_IDS.includes(m.rule.ruleId)
     ).length;
@@ -135,7 +137,6 @@ async function updateCounter() {
   }
 }
 
-
 // ── Alarm dispatcher ──────────────────────────────────────────────────────────
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -143,6 +144,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (!settings.spoofNID) return;
     const nid = generateFakeNID();
     await chrome.storage.local.set({ fakeNID: nid, lastNIDRotation: Date.now() });
+    // FIX #4: use 'lax' instead of 'no_restriction'
     chrome.cookies.set({
       url: 'https://www.google.com',
       name: 'NID',
@@ -150,7 +152,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       domain: '.google.com',
       path: '/',
       secure: true,
-      sameSite: 'no_restriction',
+      sameSite: 'lax',
       expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
     });
     await applyRules();
@@ -209,7 +211,8 @@ async function getCleanCookieHeader(queryUrl = 'https://www.google.com/search') 
 }
 
 // Helper: build a modifyHeaders rule
-function makeHeaderRule(id, urlFilter, cookieValue, extraHeaders = []) {
+// FIX #1: use precise initiatorDomains + regexFilter instead of broad urlFilter strings
+function makeHeaderRule(id, regexFilter, initiatorDomains, cookieValue, extraHeaders = []) {
   return {
     id,
     priority: 1,
@@ -223,7 +226,8 @@ function makeHeaderRule(id, urlFilter, cookieValue, extraHeaders = []) {
       ],
     },
     condition: {
-      urlFilter,
+      regexFilter,
+      initiatorDomains,
       resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
     },
   };
@@ -234,9 +238,10 @@ async function applyRules() {
   const toAdd    = [];
 
   if (settings.enabled) {
+    // FIX #6: randomise minor UA version tokens per session to avoid static-string fingerprint
     const uaHeader = settings.spoofUserAgent
       ? [{ header: 'User-Agent', operation: 'set',
-           value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0' }]
+           value: buildRandomUA() }]
       : [];
 
     // Fetch cookie headers for all enabled domains in parallel
@@ -247,10 +252,17 @@ async function applyRules() {
       settings.blockNews    ? getCleanCookieHeader('https://news.google.com/')  : Promise.resolve(null),
     ]);
 
-    // Rule 1: Google Search
-    toAdd.push(makeHeaderRule(RULE_ID_REMOVE, 'google.com/search', searchCookies, uaHeader));
+    // FIX #1: scope each rule tightly with regexFilter + initiatorDomains
+    // Rule 1: Google Search only (/search path on google.com)
+    toAdd.push(makeHeaderRule(
+      RULE_ID_REMOVE,
+      'https://[^/]*\\.google\\.com/search',
+      ['google.com'],
+      searchCookies,
+      uaHeader
+    ));
 
-    // Rule 2: Remove X-Client-Data from all google.com
+    // Rule 2: Remove X-Client-Data from google.com requests
     if (settings.removeXClientData) {
       toAdd.push({
         id: RULE_ID_XCLIENT,
@@ -260,7 +272,8 @@ async function applyRules() {
           requestHeaders: [{ header: 'X-Client-Data', operation: 'remove' }],
         },
         condition: {
-          urlFilter: 'google.com/',
+          regexFilter: 'https://[^/]*\\.google\\.com/',
+          initiatorDomains: ['google.com'],
           resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
         },
       });
@@ -268,17 +281,35 @@ async function applyRules() {
 
     // Rule 3: Google Maps
     if (settings.blockMaps && mapsCookies !== null) {
-      toAdd.push(makeHeaderRule(RULE_ID_MAPS, 'maps.google.com', mapsCookies, uaHeader));
+      toAdd.push(makeHeaderRule(
+        RULE_ID_MAPS,
+        'https://maps\\.google\\.com/',
+        ['google.com'],
+        mapsCookies,
+        uaHeader
+      ));
     }
 
     // Rule 4: YouTube
     if (settings.blockYouTube && youtubeCookies !== null) {
-      toAdd.push(makeHeaderRule(RULE_ID_YOUTUBE, '||youtube.com/', youtubeCookies, uaHeader));
+      toAdd.push(makeHeaderRule(
+        RULE_ID_YOUTUBE,
+        'https://[^/]*\\.youtube\\.com/',
+        ['youtube.com'],
+        youtubeCookies,
+        uaHeader
+      ));
     }
 
     // Rule 5: Google News
     if (settings.blockNews && newsCookies !== null) {
-      toAdd.push(makeHeaderRule(RULE_ID_NEWS, 'news.google.com', newsCookies, uaHeader));
+      toAdd.push(makeHeaderRule(
+        RULE_ID_NEWS,
+        'https://news\\.google\\.com/',
+        ['google.com'],
+        newsCookies,
+        uaHeader
+      ));
     }
   }
 
@@ -313,4 +344,11 @@ function generateFakeNID() {
   crypto.getRandomValues(arr);
   for (const b of arr) str += chars[b % chars.length];
   return `${version}=${str}`;
+}
+
+// FIX #6: randomise minor Firefox version to avoid static UA fingerprint
+function buildRandomUA() {
+  const rv  = 115 + Math.floor(Math.random() * 20);   // e.g. 115..134
+  const ver = rv + '.0';
+  return `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:${ver}) Gecko/20100101 Firefox/${ver}`;
 }

@@ -102,19 +102,37 @@ function renderCookieList() {
         return a.name.localeCompare(b.name);
       });
 
-      cookiesList.innerHTML = cleanCookies.map(c => {
+      cookiesList.innerHTML = '';
+      for (const c of cleanCookies) {
         const truncated = c.value.length > 22 ? c.value.substring(0, 22) + '...' : c.value;
-        const fakeTag   = c.isFake ? ' <span style="color: #34a853; font-weight: bold;">[fake]</span>' : '';
-        return `
-          <div class="cookie-item">
-            <span class="cookie-name">${c.name}</span>
-            <span class="cookie-value" title="${c.value}">${truncated}${fakeTag}</span>
-          </div>
-        `;
-      }).join('');
+
+        const item  = document.createElement('div');
+        item.className = 'cookie-item';
+
+        const nameEl = document.createElement('span');
+        nameEl.className   = 'cookie-name';
+        nameEl.textContent = c.name;
+
+        const valEl  = document.createElement('span');
+        valEl.className    = 'cookie-value';
+        valEl.title        = c.value;
+        valEl.textContent  = truncated;
+
+        if (c.isFake) {
+          const tag = document.createElement('span');
+          tag.style.cssText  = 'color:#34a853;font-weight:bold;';
+          tag.textContent    = ' [fake]';
+          valEl.appendChild(tag);
+        }
+
+        item.appendChild(nameEl);
+        item.appendChild(valEl);
+        cookiesList.appendChild(item);
+      }
     });
   });
 }
+
 
 // ── Toggle listeners ──────────────────────────────────────────────────────────
 

@@ -1,0 +1,12 @@
+# Build artifacts
+*.zip
+*.crx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local dev
+node_modules/
