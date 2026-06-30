@@ -49,6 +49,23 @@
     .status-bar.on  { color: #34a853; }
     .status-bar.off { color: #ea4335; }
 
+    /* Request counter bar */
+    .counter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #444;
+      border-bottom: 1px solid #1a1a1a;
+      background: #0d0d0d;
+    }
+    .counter-bar .count {
+      color: #888;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
     .section-label {
       font-size: 10px;
       font-weight: 600;
@@ -71,6 +88,21 @@
     .row-text { flex: 1; }
     .row-text strong { font-size: 13px; font-weight: 500; color: #ddd; display: block; }
     .row-text span   { font-size: 11px; color: #555; margin-top: 2px; display: block; line-height: 1.5; }
+
+    /* Service badges */
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 4px;
+      letter-spacing: .02em;
+      vertical-align: middle;
+    }
+    .tag-maps    { background: #1a3a1a; color: #34a853; border: 1px solid #1e4a1e; }
+    .tag-youtube { background: #3a1a1a; color: #ea4335; border: 1px solid #4a1e1e; }
+    .tag-news    { background: #1a2a3a; color: #4285f4; border: 1px solid #1e3a4a; }
 
     /* Toggle switch */
     .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; margin-top: 1px; }
@@ -143,6 +175,34 @@
     }
     .btn.primary:hover { background: #1f4585; color: #a8cff7; }
 
+    /* Cookies table styles */
+    .cookie-item {
+      padding: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .cookie-item + .cookie-item {
+      border-top: 1px dashed #222;
+    }
+    .cookie-name {
+      color: #4285f4;
+      font-weight: 600;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .cookie-value {
+      color: #888;
+      font-size: 10px;
+      font-family: monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+      max-width: 150px;
+    }
+
     .note {
       font-size: 10px;
       color: #3a3a3a;
@@ -178,6 +238,11 @@
   <div class="status-bar on" id="statusBar">
     <div class="dot on" id="statusDot"></div>
     <span id="statusText">Protection active</span>
+  </div>
+
+  <div class="counter-bar">
+    <span>🛡</span>
+    <span><span class="count" id="requestCounter">0</span> requests protected</span>
   </div>
 
   <div class="section-label">Protection</div>
@@ -226,6 +291,41 @@
     </label>
   </div>
 
+  <div class="section-label">Protected Services</div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-maps">Maps</span>Google Maps</strong>
+      <span>Filter account cookies on maps.google.com</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togMaps">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-news">News</span>Google News</strong>
+      <span>Filter account cookies on news.google.com</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togNews">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="row-text">
+      <strong><span class="tag tag-youtube">YouTube</span>YouTube</strong>
+      <span>Filter account cookies on youtube.com. May affect recommendations.</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="togYouTube">
+      <span class="slider"></span>
+    </label>
+  </div>
+
   <div class="section-label" id="nidSectionLabel">NID value</div>
 
   <div class="nid-box" id="nidBox">
@@ -236,6 +336,10 @@
     <div class="nid-row">
       <span class="nid-label">Regenerate a new random NID</span>
       <button class="btn primary" id="btnRegen">Regenerate</button>
+    </div>
+    <div class="nid-row">
+      <span class="nid-label">Auto-rotate every 3 days</span>
+      <span class="nid-value" id="nidNextRotation" style="color: #34a853;">calculating...</span>
     </div>
   </div>
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Clean Search",
-  "version": "3.2",
+  "version": "3.4",
   "description": "Removes account cookies from Google search requests. Keeps you logged in.",
 
   "permissions": [
@@ -9,12 +9,15 @@
     "declarativeNetRequestWithHostAccess",
     "declarativeNetRequestFeedback",
     "storage",
-    "cookies"
+    "cookies",
+    "alarms"
   ],
 
   "host_permissions": [
-    "https://www.google.com/*",
-    "https://google.com/*"
+    "https://*.google.com/*",
+    "https://google.com/*",
+    "https://www.youtube.com/*",
+    "https://youtube.com/*"
   ],
 
   "background": {
