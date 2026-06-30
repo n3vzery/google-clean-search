@@ -2,6 +2,8 @@
 
 Search Google privately while staying signed in. No logout required.
 
+[Русская версия](#russian-version)
+
 ## Features
 * Remove account cookies from search requests
 * Spoof NID tracker (rotates every 3 days)
@@ -54,3 +56,61 @@ Keep it if you want future updates to share the same extension ID.
 
 ## License
 GPL v3, see [LICENSE](LICENSE).
+
+---
+
+# Russian Version
+
+Приватный поиск в Google без необходимости выхода из аккаунта.
+
+## Возможности
+* Удаление файлов cookie аккаунта из поисковых запросов
+* Подмена трекера NID (обновляется каждые 3 дня)
+* Выбор Firefox User Agent по желанию
+* Удаление заголовка `X Client Data`
+* Обход SafeSearch (переключатель в окне расширения)
+* Индикатор состояния на иконке (зеленая/красная точка)
+
+## Установка
+
+### Chrome / Edge / Brave (режим разработчика)
+
+1. Скачайте последнюю версию `.zip` из раздела [Releases](https://github.com/n3vzery/google-clean-search/releases) и распакуйте её,
+   или клонируйте репозиторий:
+   ```
+   git clone https://github.com/n3vzery/google-clean-search.git
+   ```
+2. Откройте страницу `chrome://extensions/` в браузере.
+3. Включите **Режим разработчика** в правом верхнем углу.
+4. Нажмите **Загрузить распакованное расширение** и выберите папку `google-clean-search`.
+5. Иконка расширения появится на панели инструментов. Нажмите на неё для переключения защиты.
+
+> После обновления исходных файлов перейдите на страницу `chrome://extensions/` и нажмите кнопку обновления на карточке расширения, чтобы перезагрузить его.
+
+### Ungoogled Chromium (.crx)
+
+1. Скачайте файл `google-clean-search-v4.1.crx` из раздела [Releases](https://github.com/n3vzery/google-clean-search/releases).
+2. Откройте страницу `chrome://extensions/`.
+3. Перетащите файл `.crx` на страницу расширений.
+4. Подтвердите установку во всплывающем окне.
+
+> Обычные версии Chrome и Edge блокируют установку файлов `.crx` не из Web Store. Вместо этого используйте метод установки распакованного расширения.
+
+### Сборка из исходников
+
+Требуется PowerShell, а также наличие `chrome`/`chromium` в системном пути PATH для подписи CRX.
+
+```powershell
+git clone https://github.com/n3vzery/google-clean-search.git
+cd google-clean-search
+.\build.ps1
+```
+
+Файлы сборки сохраняются в папку `build/`:
+* `google-clean-search-v4.1.zip` для ручной установки распакованного расширения
+* `google-clean-search-v4.1.crx` для ungoogled chromium
+
+При первом запуске создается ключ `google-clean-search.pem` для подписи CRX. Сохраните его, если хотите, чтобы будущие обновления сохраняли тот же ID расширения.
+
+## Лицензия
+GPL v3, подробности в файле [LICENSE](LICENSE).
