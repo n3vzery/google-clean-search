@@ -235,7 +235,15 @@ async function getCleanCookieHeader(queryUrl = 'https://www.google.com/search') 
 }
 
 // Helper: build a modifyHeaders rule
-function makeHeaderRule(id, regexFilter, initiatorDomains, cookieValue, extraHeaders = []) {
+// initiatorDomains: if empty, rule applies regardless of where request came from
+function makeHeaderRule(id, regexFilter, cookieValue, extraHeaders = [], initiatorDomains = []) {
+  const condition = {
+    regexFilter,
+    resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
+  };
+  if (initiatorDomains && initiatorDomains.length > 0) {
+    condition.initiatorDomains = initiatorDomains;
+  }
   return {
     id,
     priority: 1,
@@ -248,11 +256,7 @@ function makeHeaderRule(id, regexFilter, initiatorDomains, cookieValue, extraHea
         ...extraHeaders,
       ],
     },
-    condition: {
-      regexFilter,
-      initiatorDomains,
-      resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
-    },
+    condition,
   };
 }
 
@@ -279,15 +283,16 @@ async function applyRules() {
     ]);
 
     // Rule 1: Google Search (/search path on google.com)
+    // No initiatorDomains: protects direct navigation AND navigation from other pages
     toAdd.push(makeHeaderRule(
       RULE_ID_REMOVE,
-      'https://[^/]*\\.google\\.com/search',
-      ['google.com'],
+      'https://[^/]*\.google\.com/search',
       searchCookies,
       uaHeader
     ));
 
     // Rule 2: Remove X-Client-Data from google.com requests
+    // Keeps initiatorDomains only for this rule because the regex is very broad (all of google.com)
     if (settings.removeXClientData) {
       toAdd.push({
         id: RULE_ID_XCLIENT,
@@ -297,95 +302,93 @@ async function applyRules() {
           requestHeaders: [{ header: 'X-Client-Data', operation: 'remove' }],
         },
         condition: {
-          regexFilter: 'https://[^/]*\\.google\\.com/',
+          regexFilter: 'https://[^/]*\.google\.com/',
           initiatorDomains: ['google.com'],
           resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
         },
       });
     }
 
-    // Rule 3: Google Maps
+    // Rule 3: Google Maps (no initiatorDomains: works on direct navigation too)
     if (settings.blockMaps && mapsCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_MAPS,
-        'https://maps\\.google\\.com/',
-        ['google.com'],
+        'https://maps\.google\.com/',
         mapsCookies,
         uaHeader
       ));
     }
 
-    // Rule 4: YouTube
+    // Rule 4: YouTube (no initiatorDomains)
     if (settings.blockYouTube && youtubeCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_YOUTUBE,
-        'https://[^/]*\\.youtube\\.com/',
-        ['youtube.com'],
+        'https://[^/]*\.youtube\.com/',
         youtubeCookies,
         uaHeader
       ));
     }
 
-    // Rule 5: Google News
+    // Rule 5: Google News (no initiatorDomains)
     if (settings.blockNews && newsCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_NEWS,
-        'https://news\\.google\\.com/',
-        ['google.com'],
+        'https://news\.google\.com/',
         newsCookies,
         uaHeader
       ));
     }
 
-    // Rule 6: Google Images
+    // Rule 6: Google Images (no initiatorDomains)
     if (settings.blockImages && imagesCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_IMAGES,
-        'https://images\\.google\\.com/',
-        ['google.com'],
+        'https://images\.google\.com/',
         imagesCookies,
         uaHeader
       ));
     }
 
-    // Rule 7: Google Scholar
+    // Rule 7: Google Scholar (no initiatorDomains)
     if (settings.blockScholar && scholarCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_SCHOLAR,
-        'https://scholar\\.google\\.com/',
-        ['google.com'],
+        'https://scholar\.google\.com/',
         scholarCookies,
         uaHeader
       ));
     }
 
-    // Rule 8: Google Shopping
+    // Rule 8: Google Shopping (no initiatorDomains)
     if (settings.blockShopping && shoppingCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_SHOPPING,
-        'https://shopping\\.google\\.com/',
-        ['google.com'],
+        'https://shopping\.google\.com/',
         shoppingCookies,
         uaHeader
       ));
     }
 
-    // Rule 9: Chrome Web Store
+    // Rule 9: Chrome Web Store (no initiatorDomains - fix for direct navigation)
     if (settings.blockWebStore && webstoreCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_WEBSTORE,
-        'https://chromewebstore\\.google\\.com/',
-        ['google.com'],
+        'https://chromewebstore\.google\.com/',
         webstoreCookies,
         uaHeader
       ));
     }
 
-    // Rule 10: SafeSearch Bypass (Redirect to add safe=off if missing or active)
+    // Rule 10: SafeSearch Bypass
+    // Adds safe=off to Google search requests.
+    // Note: DNR redirect rules do not support lookahead regex, so we use a simpler filter
+    // and rely on addOrReplaceParams which always overwrites the 'safe' value.
+    // Works when account cookies are stripped (user appears anonymous).
+    // Has no effect if SafeSearch is locked at network/DNS/Family Link level.
     if (settings.bypassSafeSearch) {
       toAdd.push({
         id: RULE_ID_SAFESEARCH,
-        priority: 2, // Higher priority to execute redirect transform before header modifications
+        priority: 2,
         action: {
           type: 'redirect',
           redirect: {
@@ -397,9 +400,10 @@ async function applyRules() {
           }
         },
         condition: {
-          // Trigger on Google search and images queries, but avoid loops: only redirect if safe parameter is NOT "off"
-          regexFilter: '^https://[^/]*\\.google\\.[a-z]+/(search|images|imgres)\\?(?!.*[?&]safe=off)(?=.*[?&]q=).*$',
-          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other']
+          // Match any google search/images/imgres page that has a query parameter (to avoid matching the homepage)
+          // addOrReplaceParams already prevents redirect loops since it only fires on navigation, not on the result URL
+          regexFilter: '^https://[^/]*\.google\.[a-z]{2,}/(search|images|imgres)(\?.*)?$',
+          resourceTypes: ['main_frame']
         }
       });
     }

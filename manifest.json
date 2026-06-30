@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Clean Search",
-  "version": "3.9",
+  "version": "4.0",
   "description": "Removes account cookies from Google search requests. Keeps you logged in.",
 
   "permissions": [
