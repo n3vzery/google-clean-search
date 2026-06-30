@@ -286,7 +286,7 @@ async function applyRules() {
     // No initiatorDomains: protects direct navigation AND navigation from other pages
     toAdd.push(makeHeaderRule(
       RULE_ID_REMOVE,
-      'https://[^/]*\.google\.com/search',
+      'https://[^/]*\\.google\\.com/search',
       searchCookies,
       uaHeader
     ));
@@ -302,7 +302,7 @@ async function applyRules() {
           requestHeaders: [{ header: 'X-Client-Data', operation: 'remove' }],
         },
         condition: {
-          regexFilter: 'https://[^/]*\.google\.com/',
+          regexFilter: 'https://[^/]*\\.google\\.com/',
           initiatorDomains: ['google.com'],
           resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'other'],
         },
@@ -313,7 +313,7 @@ async function applyRules() {
     if (settings.blockMaps && mapsCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_MAPS,
-        'https://maps\.google\.com/',
+        'https://maps\\.google\\.com/',
         mapsCookies,
         uaHeader
       ));
@@ -323,7 +323,7 @@ async function applyRules() {
     if (settings.blockYouTube && youtubeCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_YOUTUBE,
-        'https://[^/]*\.youtube\.com/',
+        'https://[^/]*\\.youtube\\.com/',
         youtubeCookies,
         uaHeader
       ));
@@ -333,7 +333,7 @@ async function applyRules() {
     if (settings.blockNews && newsCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_NEWS,
-        'https://news\.google\.com/',
+        'https://news\\.google\\.com/',
         newsCookies,
         uaHeader
       ));
@@ -343,7 +343,7 @@ async function applyRules() {
     if (settings.blockImages && imagesCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_IMAGES,
-        'https://images\.google\.com/',
+        'https://images\\.google\\.com/',
         imagesCookies,
         uaHeader
       ));
@@ -353,7 +353,7 @@ async function applyRules() {
     if (settings.blockScholar && scholarCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_SCHOLAR,
-        'https://scholar\.google\.com/',
+        'https://scholar\\.google\\.com/',
         scholarCookies,
         uaHeader
       ));
@@ -363,7 +363,7 @@ async function applyRules() {
     if (settings.blockShopping && shoppingCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_SHOPPING,
-        'https://shopping\.google\.com/',
+        'https://shopping\\.google\\.com/',
         shoppingCookies,
         uaHeader
       ));
@@ -373,7 +373,7 @@ async function applyRules() {
     if (settings.blockWebStore && webstoreCookies !== null) {
       toAdd.push(makeHeaderRule(
         RULE_ID_WEBSTORE,
-        'https://chromewebstore\.google\.com/',
+        'https://chromewebstore\\.google\\.com/',
         webstoreCookies,
         uaHeader
       ));
@@ -400,9 +400,12 @@ async function applyRules() {
           }
         },
         condition: {
-          // Match any google search/images/imgres page that has a query parameter (to avoid matching the homepage)
-          // addOrReplaceParams already prevents redirect loops since it only fires on navigation, not on the result URL
-          regexFilter: '^https://[^/]*\.google\.[a-z]{2,}/(search|images|imgres)(\?.*)?$',
+          // Match any google search/images/imgres page.
+          // addOrReplaceParams is idempotent: if safe=off is already present, Chrome detects
+          // the result URL equals the request URL and does NOT redirect (no infinite loop).
+          // NOTE: `\\.` in a JS string produces `\.` = literal dot in RE2 regex.
+          // `\\?` produces `\?` = literal question mark in RE2.
+          regexFilter: '^https://[^/]*\\.google\\.[a-z]{2,}/(search|images|imgres)(\\?.*)?$',
           resourceTypes: ['main_frame']
         }
       });
