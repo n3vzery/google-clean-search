@@ -6,7 +6,7 @@ Search Google privately while staying signed in. No logout required.
 * Remove account cookies from search requests
 * Spoof NID tracker (rotates every 3 days)
 * Optional Firefox User Agent
-* Strip `X Client Data` header
+* Strip `X-Client-Data` header
 * SafeSearch bypass (toggle in popup)
 * Badge indicator shows protection state (green/red)
 
