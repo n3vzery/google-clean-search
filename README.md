@@ -1,12 +1,12 @@
 # Google Clean Search
 
-> Search Google privately while staying signed in — no sign-out required.
+> Search Google privately while staying signed in. No sign-out required.
 
 [![Version](https://img.shields.io/badge/version-3.4-blue?style=flat-square)](https://github.com/n3vzery/google-clean-search)
 [![Manifest](https://img.shields.io/badge/Manifest-v3-green?style=flat-square)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPL%20v3-orange?style=flat-square)](LICENSE)
 
-Google attaches your account session cookies to every search request, linking your queries to your Google account. **Google Clean Search** strips those cookies at the network level before they leave your browser — so Google sees you as an anonymous user while you stay logged into Gmail, YouTube and everything else normally.
+Google attaches your account session cookies to every search request, linking your queries to your Google account. **Google Clean Search** strips those cookies at the network level before they leave your browser, so Google sees you as an anonymous user while you stay logged into Gmail, YouTube and everything else normally.
 
 ---
 
@@ -27,21 +27,21 @@ Google attaches your account session cookies to every search request, linking yo
 
 Protection can be enabled or disabled per service independently:
 
-- **Google Search** — always on when extension is enabled
-- **Google Maps** — on by default
-- **Google News** — on by default
-- **YouTube** — off by default (may affect recommendations)
+- **Google Search** - always on when extension is enabled
+- **Google Maps** - on by default
+- **Google News** - on by default
+- **YouTube** - off by default (may affect recommendations)
 
 ---
 
 ## How It Works
 
-The extension uses Chrome's **declarativeNetRequest** API to intercept outgoing requests before they leave the browser. No external servers, no proxies — everything happens locally.
+The extension uses Chrome's **declarativeNetRequest** API to intercept outgoing requests before they leave the browser. No external servers, no proxies, everything happens locally.
 
-1. **Cookie header rewriting** — account session cookies are removed from the `Cookie` header. Technical cookies like `AEC` and `SOCS` are kept so Google doesn't show captchas.
-2. **NID spoofing** — your real NID cookie is replaced with a randomly generated one. NID is not cryptographically signed, so Google accepts any value. The fake NID auto-rotates every 3 days via Chrome alarms.
-3. **Header removal** — `X-Client-Data` header (which carries account flags) is stripped entirely.
-4. **User-Agent spoofing** — optionally rewrites the UA string to a Firefox fingerprint, reducing browser-level profiling.
+1. **Cookie header rewriting** - account session cookies are removed from the `Cookie` header. Technical cookies like `AEC` and `SOCS` are kept so Google doesn't show captchas.
+2. **NID spoofing** - your real NID cookie is replaced with a randomly generated one. NID is not cryptographically signed, so Google accepts any value. The fake NID auto-rotates every 3 days via Chrome alarms.
+3. **Header removal** - `X-Client-Data` header (which carries account flags) is stripped entirely.
+4. **User-Agent spoofing** - optionally rewrites the UA string to a Firefox fingerprint, reducing browser-level profiling.
 
 ---
 
@@ -76,4 +76,4 @@ The extension icon will appear in your toolbar. Click it to manage settings.
 
 ## License
 
-GPL v3 — see [LICENSE](LICENSE) for details.
+GPL v3, see [LICENSE](LICENSE) for details.
