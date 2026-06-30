@@ -35,7 +35,7 @@ function loadSettings() {
       togXClient.checked   = data.removeXClientData !== false;
       togNID.checked       = data.spoofNID !== false;
       togUA.checked        = data.spoofUserAgent === true;
-      togSafeSearch.checked = data.bypassSafeSearch !== false;
+      togSafeSearch.checked = data.bypassSafeSearch === true; // opt-in: default false
       togMaps.checked      = data.blockMaps !== false;
       togYouTube.checked   = data.blockYouTube === true;
       togNews.checked      = data.blockNews !== false;
@@ -208,6 +208,17 @@ togWebStore.addEventListener('change', () => {
 });
 
 togSafeSearch.addEventListener('change', () => {
+  if (togSafeSearch.checked) {
+    const ok = window.confirm(
+      'This will disable SafeSearch for Google Search results.\n\n' +
+      'On devices with parental controls, school/corporate networks, or Family Link, ' +
+      'bypassing SafeSearch may violate usage policy.\n\nContinue?'
+    );
+    if (!ok) {
+      togSafeSearch.checked = false;
+      return;
+    }
+  }
   chrome.storage.local.set({ bypassSafeSearch: togSafeSearch.checked });
 });
 
@@ -223,16 +234,8 @@ function regenNID() {
       renderCookieList();
     });
 
-    chrome.cookies.set({
-      url: 'https://www.google.com',
-      name: 'NID',
-      value: res.nid,
-      domain: '.google.com',
-      path: '/',
-      secure: true,
-      sameSite: 'lax',
-      expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 180,
-    });
+    // Route through background so the suppress flag is set correctly
+    chrome.runtime.sendMessage({ type: 'setNIDCookie', nid: res.nid });
 
     chrome.alarms.clear('nid-rotation', () => {
       chrome.alarms.create('nid-rotation', {
@@ -296,7 +299,7 @@ chrome.storage.onChanged.addListener((changes) => {
   if ('blockScholar'      in changes) togScholar.checked   = changes.blockScholar.newValue !== false;
   if ('blockShopping'     in changes) togShopping.checked  = changes.blockShopping.newValue !== false;
   if ('blockWebStore'     in changes) togWebStore.checked  = changes.blockWebStore.newValue !== false;
-  if ('bypassSafeSearch'  in changes) togSafeSearch.checked = changes.bypassSafeSearch.newValue !== false;
+  if ('bypassSafeSearch'  in changes) togSafeSearch.checked = changes.bypassSafeSearch.newValue === true;
   if ('fakeNID' in changes && changes.fakeNID.newValue) {
     nidPreview.textContent = changes.fakeNID.newValue.substring(0, 30) + '...';
   }

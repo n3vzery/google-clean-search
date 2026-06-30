@@ -99,7 +99,11 @@ if (-not $ZipOnly) {
         # Save the key for future builds (keep same extension ID)
         if ((Test-Path $generatedPem) -and -not (Test-Path $keyFile)) {
             Move-Item $generatedPem $keyFile -Force
-            Write-Host "KEY: $keyFile (keep this for consistent extension ID)" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Warning "New signing key generated: $keyFile"
+            Write-Warning "DO NOT commit this file to git. Store it in a password manager."
+            Write-Warning "Without it, the extension ID will change on the next build."
+            Write-Host ""
         } elseif (Test-Path $generatedPem) {
             Remove-Item $generatedPem -Force
         }
