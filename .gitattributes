@@ -1,0 +1,9 @@
+# Normalize line endings to LF on commit for all text files.
+# This prevents dirty diffs when editing across Windows/macOS/Linux.
+* text=auto eol=lf
+
+# Force binary treatment for actual binary files
+*.png binary
+*.crx binary
+*.zip binary
+*.pem binary

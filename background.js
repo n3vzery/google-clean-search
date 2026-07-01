@@ -287,13 +287,24 @@ function makeHeaderRule(id, regexFilter, cookieValue, extraHeaders = [], initiat
   };
 }
 
-// Mutex: prevents concurrent applyRules() calls from racing each other.
-// If a rebuild is already in flight, callers await it instead of starting a new one.
+// Mutex with dirty flag: if settings change while a rebuild is in-flight,
+// we schedule one more rebuild after it finishes so DNR always reflects
+// the latest settings state (not the state at the start of the first call).
 let applyRulesInFlight = null;
+let rebuildRequestedAgain = false;
 
 async function applyRules() {
-  if (applyRulesInFlight) return applyRulesInFlight;
-  applyRulesInFlight = doApplyRules().finally(() => { applyRulesInFlight = null; });
+  if (applyRulesInFlight) {
+    rebuildRequestedAgain = true;  // mark that settings changed during the run
+    return applyRulesInFlight;
+  }
+  applyRulesInFlight = doApplyRules().finally(() => {
+    applyRulesInFlight = null;
+    if (rebuildRequestedAgain) {
+      rebuildRequestedAgain = false;
+      applyRules(); // re-run with the latest settings
+    }
+  });
   return applyRulesInFlight;
 }
 
